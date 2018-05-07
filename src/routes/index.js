@@ -22,7 +22,7 @@ var storageAudioOptions = multer.diskStorage({
 
 const audioUpload = multer({
     fileFilter: (req, file, cb) => {
-        const filetypes = /m4a|mp3/;
+        const filetypes = /m4a|mp3|mp4/;
         const mimetype = filetypes.test(file.mimetype);
         console.log("mimetypes: " + mimetype + "   file.mime: " + file.mimetype + "  fileType: " + filetypes);
         const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -81,9 +81,14 @@ module.exports = {
         router.use(authRoute.checkToken)
         router.get('/feeds', feedRoute.viewAll);
         router.get('/user/me', userRoute.viewOne);
-        router.put('/user/update', imageUpload.single('avatar'), function (req, res) {
-            userRoute.update(req, res, imageName);
+        router.put('/user/update', function (req, res) {
+            userRoute.update(req, res);
         });
+
+        router.put('/user/update/avatar', imageUpload.single('avatar'), function (req, res) {
+            userRoute.updateAvatar(req, res, imageName);
+        });
+
         router.post('/feed/create', audioUpload.single('audio'), function (req, res) {
             console.log("file name: " + fileName)
             feedRoute.createFeed(req, res, fileName);
