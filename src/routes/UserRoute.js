@@ -12,5 +12,8 @@ module.exports = {
   },
   download:function(req,res){
     user.download(req,res)
+  },
+  downloadFile:function(req,res){
+    user.downloadFile(req,res)
   }
 }

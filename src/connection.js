@@ -9,12 +9,14 @@ function Connection() {
       host: '127.0.0.1',
       user: 'root',
       password: '',
-      database: 'karaoke'
+      database: 'karaoke',
+      port:"4000"
     });
   };
 
   this.acquire = function (callback) {
     this.pool.getConnection(function (err, connection) {
+      if(err) console.log("error "+err);
       callback(err, connection);
     });
   };

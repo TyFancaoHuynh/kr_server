@@ -12,16 +12,16 @@ function Todo() {
         // let hashedPassword = bcrypt.hashSync(user.password, 8);
         connection.acquire(function (err, con) {
             con.query("select * from User where username='" + user.username + "'", user, function (err, result) {
-                if (err) return res.json(new ApiError("Server error"))
+                if (err) return res.status(500).json(new ApiError("Server error"))
                 let i = 0;
                 for (j in result) {
                     i++;
                 }
                 if (i == 0) {
                     let date = new Date();
-                    con.query("INSERT INTO User VALUES(0,'" + user.username + "','" + user.password + "','" + date.getTime() + "',null,null,null,null) ", user, function (err, result) {
+                    con.query("INSERT INTO User VALUES(0,'" + user.username + "','" + user.password + "','" + date.getTime() + "',null,null,null,null,null) ", user, function (err, result) {
                         if (err) {
-                            return res.json(new ApiError("There was a problem registering the user."))
+                            return res.status(500).json(new ApiError("There was a problem registering the user."))
                         }
                         let userSuccess = {
                             username: user.username,
@@ -37,7 +37,12 @@ function Todo() {
                         })
                     });
                 } else {
-                    res.json(new ApiError("Username has existed"))
+                    res.status(500).json(
+                        {
+                            success:false,
+                            message:"Username has existed"
+                        }
+                    )
                 }
             })
         });
@@ -50,7 +55,7 @@ function Todo() {
             // verifies secret and checks exp
             jwt.verify(token, config.secret, function (err, decoded) {
                 if (err) {
-                    return res.json({ success: false, message: 'Failed to authenticate token.' });
+                    return res.status(401).json({ success: false, message: 'Failed to authenticate token' });
                 } else {
                     // if everything is good, save to request for use in other routes
                     req.decoded = decoded;
@@ -61,7 +66,7 @@ function Todo() {
         } else {
             // if there is no token
             // return an error
-            return res.status(403).send({
+            return res.status(401).json({
                 success: false,
                 message: 'No token provided.'
             });
@@ -76,7 +81,7 @@ function Todo() {
         connection.acquire(function (err, con) {
             con.query("select * from User where username='" + user.username + "'", user, function (err, result) {
                 if (err) {
-                    return res.json(new ApiError("Error on the server"))
+                    return res.status(500).json(new ApiError("Error on the server"))
                 }
                 if (result.length != 0) {
                     var object = result[0];
@@ -86,7 +91,9 @@ function Todo() {
                     // Check result í not empty , fun bycrypt.haSync wrong
                     con.release();
                     var passwordIsValid = req.body.password === object.password
-                    if (!passwordIsValid) return res.json(new ApiError(HttpStatus.UNAUTHORIZED, "Unauthorized token"));
+                    if (!passwordIsValid) return res.status(401).json({
+                        message:"Failed to authenticate token'"
+                    });
                     let userSuccess = {
                         username: req.body.username,
                         password: req.body.password
@@ -96,10 +103,14 @@ function Todo() {
                     });
                     res.status(200).json({
                         success: true,
-                        token: token
+                        token: token,
+                        user:result[0]
                     });
                 } else {
-                    res.json("username doesn't exist");
+                    res.status(500).json({
+                        success: false,
+                        message: "Username doesn't exist"
+                    });
                 }
 
             });

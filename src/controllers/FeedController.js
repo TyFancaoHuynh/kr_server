@@ -4,6 +4,7 @@ var fs = require('fs');
 var Q = require("q");
 var Feed = require("../models/Feed");
 var APIError = require("../lib/APIError")
+var env="http://192.168.1.4:3000/";
 
 function Todo() {
 
@@ -15,68 +16,87 @@ function Todo() {
             let promises = [];
             con.query('select * from Feed order by time desc', function (err, result) {
                 if (err) {
-                    res.json("Error when querry database");
+                    res.status(500).json(new APIError("Server error querry database"));
                 } else {
+                    console.log("env: "+process.env.KARA_DOMAIN);
                     size = result.length;
-                    for (i in result) {
-                        new Promise((resolve, reject) => {
-                            let feed = {
-                                id: result[i].id,
-                                caption: result[i].caption,
-                                file_music: result[i].file_music,
-                                like_count: result[i].like_count,
-                                like_flag: result[i].like_flag,
-                                time: result[i].time,
-                                id_user: result[i].id_user
-                            }
-                            resolve(feed);
-                        })
-                            .then(feed => {
-                                return new Promise((resolve, reject) => {
-                                    con.query("select * from User where id='" + feed.id_user + "'", function (err, rs) {
-                                        if (err) {
-                                            return reject("Error when querry database");
-                                        } else {
-                                            feed.avatar = rs[0].avatar;
-                                            feed.username = rs[0].username
-                                            resolve(feed);
-                                        }
-                                    })
-                                });
+                    if(result.length!=0){
+                        for (i in result) {
+                            new Promise((resolve, reject) => {
+                                let image=null
+                                    if(result[i].image_file!=null){
+                                        image=env+result[i].image_file
+                                    }
+                                let feed = {
+                                    id: result[i].id,
+                                    caption: result[i].caption,
+                                    file_music: env+ result[i].file_music,
+                                    // file_music: process.env.KARA_DOMAIN + result[i].file_music,
+                                    file_music_user_write: result[i].file_music_user_write,
+                                    image_file:image,
+                                    like_count: result[i].like_count,
+                                    like_flag: result[i].like_flag,
+                                    time: result[i].time,
+                                    id_user: result[i].id_user
+                                }
+                                resolve(feed);
                             })
-                            .then(feed => {
-                                return new Promise((resolve, reject) => {
-                                    let f = feed;
-                                    con.query("select * from Comment where id_feed=" + f.id, function (err, rs1) {
-                                        if (err) {
-                                            reject("Error querry database");
-                                        }
-                                        f.comment_count = rs1.length;
-                                        f.comments = rs1;
-                                        resolve(f);
+                                .then(feed => {
+                                    return new Promise((resolve, reject) => {
+                                        con.query("select * from User where id='" + feed.id_user + "'", function (err, rs) {
+                                            if (err) {
+                                                return reject("Error when querry database");
+                                            } else {
+                                                feed.avatar=env+"avatar/"+rs[0].avatar;
+                                                // feed.avatar = process.env.KARA_DOMAIN + rs[0].avatar;
+                                                feed.username = rs[0].username
+                                                resolve(feed);
+                                            }
+                                        })
                                     });
                                 })
-                            })
-                            .then(feed => {
-                                console.log("feed: " + feed.comments.length + " id: " + feed.id);
-                                object.push(feed);
-                                console.log("obSize: " + object.length + " size : " + size);
-                                if (object.length == size) {
-                                    res.json({
-                                        feeds: object
-                                    });
-                                }
-                            }).catch(function (error) {
-                                console.log(error);
-                                res.send(error);
-                            })
+                                .then(feed => {
+                                    return new Promise((resolve, reject) => {
+                                        let f = feed;
+                                        con.query("select * from Comment where id_feed=" + f.id, function (err, rs1) {
+                                            if (err) {
+                                                reject("Error querry database");
+                                            }
+                                            f.comment_count = rs1.length;
+                                            f.comments = rs1;
+                                            resolve(f);
+                                        });
+                                    })
+                                })
+                                .then(feed => {
+                                    console.log("feed: " + feed.comments.length + " id: " + feed.id);
+                                    object.push(feed);
+                                    console.log("obSize: " + object.length + " size : " + size);
+                                    if (object.length == size) {
+                                        res.json({
+                                            feeds: object
+                                        });
+                                        con.release();
+                                    }
+                                }).catch(function (error) {
+                                    console.log(error);
+                                    res.status(500).json(new APIError("Server error"));
+                                    con.release();
+                                })
+                        }
+                    }else{
+                        res.json({
+                            feeds: object
+                        });
+                        con.release();
                     }
+                    
                 }
             })
         });
     };
 
-    this.create = function (req, res, fileName) {
+    this.create = function (req, res, fileName,fileNameUserWrite,imageFile) {
         console.log(req.file)
         let feed = req.body
         console.log("decode1: " + req.decoded.username)
@@ -84,16 +104,17 @@ function Todo() {
         connection.acquire(function (err, con) {
             con.query("select * from User where username='" + req.decoded.username + "'", function (err, rs) {
                 let date = new Date();
-                con.query("INSERT INTO Feed VALUES(0,'" + feed.caption + "','" + rs[0].id + "','" + fileName + "',0,0," + date.getTime() + ")", feed, function (err, result) {
+                con.query("INSERT INTO Feed VALUES(0,'" + feed.caption + "','" + rs[0].id + "','" + fileName + "','"+fileNameUserWrite+"','"+imageFile+"',0,0," + date.getTime() + ")", feed, function (err, result) {
                     if (err) {
-                        res.send('Error' + err);
+                        console.log("error at create feed: "+err);
+                        res.status(500).json(new APIError("Server error"));
                     }
                     else {
                         connection.acquire(function (err, con) {
                             console.log("id: " + feed.id_user)
                             con.query("SELECT * FROM `Feed` WHERE id_user=" + rs[0].id + " ORDER BY id DESC LIMIT 1", feed, function (err, result) {
                                 if (err) {
-                                    res.json(new APIError("Server error"));
+                                    res.status(500).json(new APIError("Server error"));
                                 }
                                 else {
                                     res.json({
@@ -108,45 +129,111 @@ function Todo() {
                 });
             });
         });
-    };
+    }
+
+    this.update = function (req, res, fileName,fileNameUserWrite) {
+        console.log(req.file)
+        let feed = req.body
+        console.log("decode1: " + req.decoded.username)
+
+        connection.acquire(function (err, con) {
+            con.query("select * from User where username='" + req.decoded.username + "'", function (err, rs) {
+                let date = new Date();
+                    con.query("update Feed set caption='" + feed.caption + "',file_music='" + fileName + "',file_music_user_write'"+fileNameUserWrite+"',time=" + date.getTime() + ") where id="+feed.id, feed, function (err, result) {
+                    if (err) {
+                        res.status(500).json(new APIError("Server error"));
+                    }
+                    else {
+                        connection.acquire(function (err, con) {
+                            console.log("id: " + feed.id_user)
+                            con.query("SELECT * FROM `Feed` WHERE id_user=" + rs[0].id + " ORDER BY id DESC LIMIT 1", feed, function (err, result) {
+                                if (err) {
+                                    res.status(500).json(new APIError("Server error"));
+                                }
+                                else {
+                                    res.json({
+                                        feed: result[0]
+                                    });
+                                    console.log("result: " + result[0]);
+                                    con.release();
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+        this.delete = function (req, res) {
+            var feedId=req.params.id;
+            connection.acquire(function (err, con) {
+                    con.query("DELETE from Feed where id='"+feedId +"'", function (err, result) {
+                        if (err) {
+                            res.status(500).json(new APIError("Server error"));
+                        }
+                        else {
+                            res.json({
+                                status:true
+                            })
+                        }
+                    });
+                });
+        };
 
     this.viewOne = function (req, res) {
         let username = req.decoded.username
         connection.acquire(function (err, con) {
             con.query("select * from User where username='" + username + "'", function (err, result) {
                 if (err) {
-                    res.send('Error' + err);
+                    res.status(500).json(new APIError("Server error querry database"));
                 }
                 else {
                     console.log("id: " + result[0].id);
-                    con.query("select * from Feed where id_user='" + result[0].id + "'", function (err, rs) {
+                    con.query("select * from Feed where id_user='" + result[0].id + "' ORDER BY time DESC", function (err, rs) {
                         if (err) {
-                            res.send('Error' + err);
+                            res.status(500).json(new APIError("Server error querry database"));
                         }
                         else {
                             let object = [];
-                            for (i in rs) {
-                                let feed = {
-                                    id: rs[i].id,
-                                    caption: rs[i].caption,
-                                    avatar: result[0].avatar,
-                                    username: result[0].username,
-                                    file_music: rs[i].file_music,
-                                    like_count: rs[i].like_count,
-                                    like_flag: rs[i].like_flag,
-                                    time: rs[i].time
-                                }
-                                con.query("select * from Comment where id_feed=" + rs[i].id, function (err, rs1) {
-                                    feed.comment_counnt = rs1.length
-                                    feed.comments = rs1;
-                                    object.push(feed);
-                                    console.log("onject.length: " + object.length + "rs.length: " + rs.length)
-                                    if (object.length == rs.length) {
-                                        res.json(object);
+                            if(rs.length!=0){
+                                for (i in rs) {
+                                    var image=null
+                                    if(rs[i].image_file!=null){
+                                        image=env+rs[i].image_file
                                     }
-                                });
-                            }
+                                    let feed = {
+                                        id: rs[i].id,
+                                        caption: rs[i].caption,
+                                        avatar: env+"avatar/"+ result[0].avatar,
+                                        username: result[0].username,
+                                        file_music: env+ rs[i].file_music,
+                                        file_music_user_write: rs[i].file_music_user_write,
+                                        image_file:image,
+                                        like_count: rs[i].like_count,
+                                        like_flag: rs[i].like_flag,
+                                        time: rs[i].time
+                                    }
+                                    con.query("select * from Comment where id_feed=" + rs[i].id, function (err, rs1) {
+                                        feed.comment_count = rs1.length
+                                        feed.comments = rs1;
+                                        object.push(feed);
+                                        console.log("onject.length: " + object.length + "rs.length: " + rs.length)
+                                        if (object.length == rs.length) {
+                                            console.log("json respone")
+                                            res.json({
+                                                feeds:object
+                                            });
+                                            con.release();
+                                        }
+                                    });
+                                }
+                            }else{
+                                res.json({
+                                    feeds:object
+                                })
                             con.release();
+                            }
                         }
                     });
                 }
@@ -171,10 +258,11 @@ function Todo() {
                             res.json({
                                 like_count: likeCount
                             });
+                             con.release();
+                            
                         }
                     });
                 }
-                con.release();
             });
         });
     };
@@ -196,10 +284,11 @@ function Todo() {
                             res.json({
                                 like_count: likeCount
                             });
+                             con.release();
+                            
                         }
                     });
                 }
-                con.release();
             });
         });
     };
@@ -244,7 +333,7 @@ function Todo() {
                                                         if (err) {
                                                             return reject("Error when querry database");
                                                         } else {
-                                                            response.avatar = rs1[0].avatar;
+                                                            response.avatar = env+"avatar/"+ rs1[0].avatar;
                                                             response.username = rs1[0].username
                                                             resolve(response);
                                                         }
@@ -257,19 +346,22 @@ function Todo() {
                                                     res.json({
                                                         comments: listComment
                                                     });
+                                                   con.release();
+                                                    
                                                 }
                                             }).catch(function (error) {
                                                 console.log(error);
-                                                res.send(error);
+                                                res.status(500).send(error);
+                                                con.release();
                                             })
                                     }
                                 }
                             });
                         }
-                        con.release();
                     });
                 } else {
-                    res.json("no token provider");
+                    res.status(401).json({
+                        message: "no token provider"});
                 }
             });
         });
@@ -281,8 +373,8 @@ function Todo() {
         connection.acquire(function (err, con) {
             con.query("select * from Comment where id_feed='" + idFeed + "'", function (err, result) {
                 if (err) {
-                    res.json(new APIError("Error when querry database 0"));
-                } else {
+                    res.status(500).json(new APIError("Error when querry database 0"));
+                } else if(result.length!=0){
                     for (i in result) {
                         let comment = {
                             id: result[i].id,
@@ -292,16 +384,20 @@ function Todo() {
                         };
                         con.query("select * from User where id='" + result[i].id_user_comment + "'", function (err, rs) {
                             if (err) {
-                                res.json(new APIError("Error when querry database "));
+                                res.status(500).json(new APIError("Error when querry database "));
                             } else {
-                                comment.avatar = rs[0].avatar;
+                                comment.avatar = env+"avatar/"+rs[0].avatar;
                                 listComment.push(comment);
                                 if (listComment.length == result.length) {
                                     res.json(listComment);
+                                    con.release();
                                 }
                             }
                         })
                     }
+                }else{
+                    res.json(listComment)
+                    con.release();
                 }
             });
         });
