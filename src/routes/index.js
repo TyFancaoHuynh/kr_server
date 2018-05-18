@@ -103,7 +103,7 @@ module.exports = {
         router.post('/login', authRoute.login);
         router.use(authRoute.checkToken)
         router.get('/feeds', feedRoute.viewAll);
-        router.get('/user/me', userRoute.viewOne);
+        router.get('/user/infor/:id', userRoute.viewOne);
         router.put('/user/update', function (req, res) {
             userRoute.update(req, res);
         });
@@ -120,7 +120,7 @@ module.exports = {
             feedRoute.createFeed(req, res, fileName,fileNameUserWrite,imageFile);
         });
 
-        router.get('/feed/me', feedRoute.viewOne);
+        router.get('/feed/infor/:id', feedRoute.viewOne);
         router.get('/feed/:id/comments', feedRoute.comments);
         router.post('/feed/:id/like', feedRoute.like);
         router.delete('/feed/:id/like', feedRoute.unlike);

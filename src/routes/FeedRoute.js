@@ -3,7 +3,7 @@ var feed = require('../controllers/FeedController');
 var timeout=10000
 module.exports = {
     viewAll: function (req, res) {
-    feed.viewAll(res);
+    feed.viewAll(req,res);
     },
     createFeed: function (req, res, fileName,fileNameUserWrite,imageFile) {
             feed.create(req, res, fileName,fileNameUserWrite,imageFile);

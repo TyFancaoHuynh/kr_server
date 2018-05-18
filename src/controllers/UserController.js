@@ -3,26 +3,37 @@ var APIError=require('./../lib/APIError');
 var path = require('path');
 var fs = require('fs');
 var Q = require("q");
-var env="http://192.168.1.4:3000/";
+var jwt = require('jsonwebtoken');
+var bcrypt = require('bcryptjs');
+var config = require('../config');
+const HttpStatus = require('http-status');
+
+var env="http://192.168.1.7:3000/";
 
 function Todo() {
 
   this.get = function (req, res) {
-    console.log("user controller")
+    console.log("user controller "+req.params.id);
     connection.acquire(function (err, con) {
-      con.query("select * from User where username='" + req.decoded.username + "'", function (err, result) {
+      con.query("select * from User where id=" + req.params.id , function (err, result) {
         if (err) return res.status(500).json(new APIError("server error"));
-        con.release();
-        res.json(result);
+         else{
+              let user=result[0];
+              console.log("avatar user: "+result[0].avatar)
+              user.avatar=env+"avatar/"+result[0].avatar;
+               res.json(user);
+           }        
+        con.release();        
       });
     });
   };
 
   this.update = function (req, res) {
-    let user = req.body
+    let user = req.body;
+    let username = req.decoded.username;
     connection.acquire(function (err, con) {
       let date = new Date();
-      con.query("update User set username='" + user.username + "',password='" + user.password + "',update_at=" + date.getTime() + ",email='" + user.email + "'", user, function (err, result) {
+      con.query("update User set username='" + user.username + "',password='" + user.password + "',update_at=" + date.getTime() + ",email='" + user.email + "' where username= '"+username+"'", user, function (err, result) {
         if (err) {
           console.log("error at update me: "+err);
           res.status(500).json(new APIError("Server error querry database"));
@@ -30,7 +41,8 @@ function Todo() {
         else {
           let userSuccess = {
             username: user.username,
-            password: user.password
+            password: user.password,
+            email:user.email
           }
           var token = jwt.sign(userSuccess, config.secret, {
             expiresIn: 2592000 // expires in 30 days

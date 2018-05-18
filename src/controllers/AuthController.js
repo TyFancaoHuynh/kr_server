@@ -4,6 +4,7 @@ var bcrypt = require('bcryptjs');
 var connection = require('../connection');
 var config = require('../config');
 const HttpStatus = require('http-status');
+var env="http://192.168.1.7:3000/";
 
 function Todo() {
     this.register = function (req, res, next) {
@@ -101,10 +102,12 @@ function Todo() {
                     var token = jwt.sign(userSuccess, config.secret, {
                         expiresIn: 2592000 // expires in 24 hours
                     });
+                    let user=result[0];
+                    user.avatar=env+"avatar/"+result[0].avatar;
                     res.status(200).json({
                         success: true,
                         token: token,
-                        user:result[0]
+                        user:user
                     });
                 } else {
                     res.status(500).json({
