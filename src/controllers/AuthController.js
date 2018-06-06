@@ -4,7 +4,7 @@ var bcrypt = require('bcryptjs');
 var connection = require('../connection');
 var config = require('../config');
 const HttpStatus = require('http-status');
-var env="http://192.168.1.7:3000/";
+var env="http://192.168.43.21:3001/";
 
 function Todo() {
     this.register = function (req, res, next) {

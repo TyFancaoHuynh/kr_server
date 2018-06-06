@@ -1,0 +1,127 @@
+body {line-height: 1;margin:0; padding:0; font-size:0.7rem;font-family: 'helvetica neue','hiragino sans gb','arial','tahoma','Microsoft Yahei','sans-serif';}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,textarea,blockquote,p{padding:0; margin:0;}
+table,td,tr,th{font-size:10px;}
+ol,ul {list-style:none;}
+li{list-style-type:none;}
+img{vertical-align:top;border:0;}
+h1,h2,h3,h4,h5,h6{font-size:12px; font-weight:normal;}
+address,cite,code,em,th,i{font-weight:normal; font-style:normal;}
+.clearfix{*zoom:1;}
+.clearfix:after{display:block; overflow:hidden; clear:both; height:0; visibility:hidden; content:".";}
+a:link,a:visited
+{
+    text-decoration: none;
+}
+pre{
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+input
+{
+    outline: 0;
+    border: 0;
+    outline:none;
+    -webkit-appearance: none;
+}
+.ellipsis{
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    -ms-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+.moreELlipsis{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+i,strong,em{
+    font-weight: normal;
+}
+.clearfix{
+	zoom:1;
+}
+.clearfix:after{
+	display: block;
+	content: '';
+	clear: both;
+	overflow: hidden;
+	height: 0;
+}
+#load{
+  position: fixed;
+  display: none;
+  z-index: 1000;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+#load .mask{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    opacity: .2;
+    filter:Alpha(opacity=20);
+}
+#load #showMask{
+    background-color: #fff;
+    width: 80%;
+    height: 154px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -40%;
+    margin-top: -77px;
+    border: 1px solid #ccc;
+    z-index: 10;
+}
+#load #showMask li{
+    height: 50px;
+    text-align: center;
+    line-height: 50px;
+    font-size: 16px;
+    border-bottom: 1px solid #ccc;
+}
+#load #showMask li a{
+  display: block;
+  height: 50px;
+  font-size: 16px;
+  color: #333;
+}
+.toast{
+  width: 100%;
+  position: fixed;
+  left: 0;
+  top: 50%;
+  margin-top: -1.15rem;
+  text-align: center;
+  z-index: 6;
+  display: none;
+}
+.toast span{
+  display: inline-block;
+  text-align: center;
+  width: 12rem;
+  padding: 0.7rem 0.5rem;
+  background-color: #212125;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+.mask{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #000;
+    opacity: 0.5;
+    z-index: -1;
+}

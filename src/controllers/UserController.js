@@ -8,7 +8,7 @@ var bcrypt = require('bcryptjs');
 var config = require('../config');
 const HttpStatus = require('http-status');
 
-var env="http://192.168.1.7:3000/";
+var env="http://192.168.43.21:3001/";
 
 function Todo() {
 
@@ -16,14 +16,24 @@ function Todo() {
     console.log("user controller "+req.params.id);
     connection.acquire(function (err, con) {
       con.query("select * from User where id=" + req.params.id , function (err, result) {
-        if (err) return res.status(500).json(new APIError("server error"));
+        if (err) {
+          console.log("err at get user: "+err);
+          res.status(500).json(new APIError("server error"));
+        }
          else{
-              let user=result[0];
-              console.log("avatar user: "+result[0].avatar)
-              user.avatar=env+"avatar/"+result[0].avatar;
-               res.json(user);
+           if(result.length!=0){
+            let user=result[0];
+            console.log("avatar user: "+result[0].avatar)
+            user.avatar=env+"avatar/"+result[0].avatar;
+             res.json(user);
+              con.release();        
+             
+           }else{
+             res.json({});
+             con.release();
+           }
+          
            }        
-        con.release();        
       });
     });
   };

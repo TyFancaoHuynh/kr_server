@@ -21,12 +21,16 @@ var storageAudioOptions = multer.diskStorage({
             let date = new Date()
             console.log("file at first: "+file)
         if(j%2==0){
-            fileName = req.decoded.username + '-' + file.fieldname + '-' + date.getHours() + '_' + date.getMinutes() + '_' + date.getSeconds() + '-' + date.getDate() + '_' + date.getMonth() + '_' + date.getFullYear()
+            fileName = file.fieldname + '-' + date.getHours() + '_' + date.getMinutes() + '_' + date.getSeconds() + '-' + date.getDate() + '_' + date.getMonth() + '_' + date.getFullYear()
             console.log("imagefile")
            cb(null, fileName);            
         }else{
-            imageFile=req.decoded.username + '-' + file.fieldname + '-' + date.getHours() + '_' + date.getMinutes() + '_' + date.getSeconds() + '-' + date.getDate() + '_' + date.getMonth() + '_' + date.getFullYear()
-            cb(null, imageFile);
+            if(file!=null){
+                imageFile=file.fieldname + '-' + date.getHours() + '_' + date.getMinutes() + '_' + date.getSeconds() + '-' + date.getDate() + '_' + date.getMonth() + '_' + date.getFullYear()
+                cb(null, imageFile);
+            }else{
+                imageFile=null
+            }
         }
         j++;               
     }
@@ -70,7 +74,7 @@ var storageImageOptions = multer.diskStorage({
     destination: 'uploads/avatars',
     filename: function (req, file, cb) {
         let date = new Date()
-        imageName = req.decoded.username + '-' + file.fieldname + '-' + date.getHours() + '_' + date.getMinutes() + '_' + date.getSeconds() + '-' + date.getDate() + '_' + date.getMonth() + '_' + date.getFullYear()
+        imageName = file.fieldname + '-' + date.getHours() + '_' + date.getMinutes() + '_' + date.getSeconds() + '-' + date.getDate() + '_' + date.getMonth() + '_' + date.getFullYear()
         cb(null, imageName)
     }
 });
@@ -111,6 +115,7 @@ module.exports = {
         router.put('/user/update/avatar', imageUpload.single('avatar'), function (req, res) {
             userRoute.updateAvatar(req, res, imageName);
         });
+        router.get('/feed/:id/likes',feedRoute.userLike);
 
         router.post('/feed/create', audioUpload.fields([{ name: 'audio', maxCount: 1 }, { name: 'image', maxCount: 1}]), function (req, res) {
             fileNameUserWrite=req.body.file_name;   
@@ -120,16 +125,19 @@ module.exports = {
             feedRoute.createFeed(req, res, fileName,fileNameUserWrite,imageFile);
         });
 
-        router.get('/feed/infor/:id', feedRoute.viewOne);
+        // router.get('/content/infor', feedRoute.viewOne);
         router.get('/feed/:id/comments', feedRoute.comments);
         router.post('/feed/:id/like', feedRoute.like);
         router.delete('/feed/:id/like', feedRoute.unlike);
         router.post('/feed/:id/comment', feedRoute.comment);
         router.delete('/feed/me/:id',feedRoute.deleteFeed);
+        router.get('/feed/infor/:id/', feedRoute.viewOne);
         router.put('/feed/me',audioUpload.fields([{ name: 'audio', maxCount: 1 }, { name: 'image', maxCount: 1}]),function(req,res){
             feedRoute.updateFeed(req, res, fileName,fileNameUserWrite);
         });
 
+        app.get('/feed/infor/:id/:userId', feedRoute.viewOneWithID);
+        
         app.get('/avatar/:file(*)',(req, res) => {
             var file = req.params.file;
             var fileLocation = path.join('./uploads/avatars',file);
@@ -143,5 +151,6 @@ module.exports = {
             console.log(fileLocation);
             res.download(fileLocation, file); 
           });
+
     }
 };

@@ -3,8 +3,8 @@ var path = require('path');
 var fs = require('fs');
 var Q = require("q");
 var Feed = require("../models/Feed");
-var APIError = require("../lib/APIError")
-var env="http://192.168.1.7:3000/";
+var APIError = require("../lib/APIError");
+var env="http://192.168.43.21:3001/";
 
 function Todo() {
 
@@ -34,7 +34,7 @@ function Todo() {
                                     // file_music: process.env.KARA_DOMAIN + result[i].file_music,
                                     file_music_user_write: result[i].file_music_user_write,
                                     image_file:image,
-                                    like_count: result[i].like_count,
+                                    like_count:result[i].like_count,                                   
                                     time: result[i].time,
                                     id_user: result[i].id_user
                                 }
@@ -45,9 +45,13 @@ function Todo() {
                                     con.query("select * from `Like` where username = '"+username+"' and id_feed="+feed.id,function(err,result){
                                          if(err) return reject(err);
                                             else{
-                                               feed.like_flag=result[0].like_flag;
-                                               feed.like_count=result[0].like_count;
-                                               resolve(feed);
+                                                if(result.length!=0){
+                                                    console.log("like_flag at 48: "+result[0].like_flag)
+                                                    feed.like_flag=result[0].like_flag;
+                                                }else{
+                                                    feed.like_flag=0;
+                                                }
+                                               resolve(feed);                                               
                                             }
                                     })
                                 })
@@ -74,7 +78,11 @@ function Todo() {
                                                 reject("Error querry database");
                                             }
                                             f.comment_count = rs1.length;
-                                            f.comments = rs1;
+                                            var comments=rs1;
+                                            for(i in rs1){
+                                                comments[i].avatar=env+"avatar/"+rs1[i].avatar;
+                                            }
+                                            f.comments = comments;
                                             resolve(f);
                                         });
                                     })
@@ -106,36 +114,48 @@ function Todo() {
     };
 
     this.create = function (req, res, fileName,fileNameUserWrite,imageFile) {
-        console.log(req.file)
         let username=req.decoded.username;
         let feed = req.body
         connection.acquire(function (err, con) {
             con.query("select * from User where username='" + req.decoded.username + "'", function (err, rs) {
-                let date = new Date();
-                con.query("INSERT INTO Feed VALUES(0,'" + feed.caption + "','" + rs[0].id + "','" + fileName + "','"+fileNameUserWrite+"','"+imageFile+"',0," + date.getTime() + ")", feed, function (err, result) {
-                    if (err) {
-                        res.status(500).json(new APIError("Server error"));
-                    }
-                    else {
-                            con.query("SELECT * FROM Feed WHERE id_user=" + rs[0].id + " ORDER BY id DESC LIMIT 1", feed, function (err, result) {
-                                if (err) {
-                                    res.status(500).json(new APIError("Server error"));
-                                }
-                                else {
-                                   con.query("insert into Like values("+result[0].id)+","+username+",0)",function(err,res){
-                                    if(err) return res.status(500).json(new APIError("Server error"));
-                                    else{
-                                        res.json({
-                                            feed: result[0]
-                                        });
-                                        con.release();
-                                       }
+                if(err) {
+                       console.log("username: "+username+"  errr "+err);
+                       res.status(500).json(new APIError("Server error"));
+                }
+                else{
+                    let date = new Date();
+                    con.query("INSERT INTO Feed VALUES(0,'" + feed.caption + "','" + rs[0].id + "','" + fileName + "','"+fileNameUserWrite+"','"+imageFile+"',0," + date.getTime() + ")", feed, function (err, result) {
+                        if (err) {
+                            console.log("error at create: "+err)
+                            res.status(500).json(new APIError("Server error"));
+                        }
+                        else {
+                            console.log("vo ko loi: 1 ");
+                                con.query("SELECT * FROM Feed WHERE id_user=" + rs[0].id + " ORDER BY id DESC LIMIT 1", feed, function (err, result) {
+                                    if (err) {
+                                        console.log("errr111 at insert like: "+err);
+                                        res.status(500).json(new APIError("Server error"));
                                     }
-                                   
-                                }
-                            });
-                    }
-                });
+                                    else {
+                                        console.log("vo ko loi: 0 "+result[0].id +"username: "+username);
+                                       con.query("insert into `Like` values("+result[0].id+",'"+username+"',0)",function(err,res1){
+                                        if(err) {
+                                            console.log("errr at insert like: "+err)
+                                             res.status(500).json(new APIError("Server error"));
+                                        }
+                                        else{
+                                            console.log("vo ko loi: 2 ");
+                                            res.json({
+                                                feed: result[0]
+                                            });
+                                            con.release();
+                                           }
+                                        })  
+                                    }
+                                });
+                        }
+                    });
+                }
             });
         });
     }
@@ -172,16 +192,26 @@ function Todo() {
     }
 
         this.delete = function (req, res) {
+            let username=req.decoded.username;
             var feedId=req.params.id;
             connection.acquire(function (err, con) {
                     con.query("DELETE from Feed where id='"+feedId +"'", function (err, result) {
                         if (err) {
+                            console.log("err at delete feed: "+err)
                             res.status(500).json(new APIError("Server error"));
                         }
                         else {
-                            res.json({
-                                status:true
+                            con.query("DELETE from `Like` where id_feed= "+feedId +" and username= '"+username+"'", function (err, result) {
+                                if (err) {
+                                    console.log("err at delete like 0: "+err)
+                                    res.status(500).json(new APIError("Server error"));
+                                }else{
+                                    res.json({
+                                        status:true
+                                    })
+                                }
                             })
+                        
                         }
                     });
                 });
@@ -193,12 +223,14 @@ function Todo() {
         connection.acquire(function (err, con) {
             con.query("select * from User where id='" + id + "'", function (err, result) {
                 if (err) {
+                    console.log("err11 at get feed one: "+err);
                     res.status(500).json(new APIError("Server error querry database"));
                 }
                 else {
                     if(result.length!=0){
                         con.query("select * from Feed where id_user='" + result[0].id + "' ORDER BY time DESC", function (err, rs) {
                             if (err) {
+                                console.log("err12 at get feed one: "+err);
                                 res.status(500).json(new APIError("Server error querry database"));
                             }
                             else {
@@ -206,7 +238,7 @@ function Todo() {
                                 if(rs.length!=0){
                                     for (i in rs) {
                                         var image=null
-                                        if(rs[i].image_file!=null){
+                                        if(rs[i].image_file !=null){
                                             image=env+rs[i].image_file
                                         }
                                         let feed = {
@@ -214,17 +246,21 @@ function Todo() {
                                             caption: rs[i].caption,
                                             avatar: env+"avatar/"+ result[0].avatar,
                                             username: result[0].username,
+                                            id_user:rs[i].id_user,
                                             file_music: env+ rs[i].file_music,
                                             file_music_user_write: rs[i].file_music_user_write,
                                             image_file:image,
+                                            like_count:rs[i].like_count,
                                             time: rs[i].time
                                         }
-                                        con.query("select * from Like where id_feed="+rs[i].id +" and username= '"+username+"'",function(err,res1){
-                                             if(err)  res.status(500).json(new APIError("Server error querry database"));
+                                        con.query("select * from `Like` where id_feed="+rs[i].id +" and username= '"+username+"'",function(err,res1){
+                                             if(err)  {
+                                                console.log("err13 at get feed one: "+err);
+                                                 res.status(500).json(new APIError("Server error querry database"));
+                                             }
                                              else {
                                                  if(res1.length!=0){
                                                     feed.like_flag=res1[0].like_flag;
-                                                    feed.like_count= res1[0].like_count
                                                     con.query("select * from Comment where id_feed=" + rs[i].id, function (err, rs1) {
                                                         feed.comment_count = rs1.length
                                                         feed.comments = rs1;
@@ -262,28 +298,61 @@ function Todo() {
     this.like = function (req, res) {
         let username=req.decoded.username;
         let idFeed = req.params.id;
-        console.log("like:  "+idFeed+  "   username: "+username);
-        
         connection.acquire(function (err, con) {
-            con.query("select * from `Like` where id_feed =" + idFeed + " and username ='"+username+"'", function (err, result, field) {
+            con.query("select * from `Feed` where id=" + idFeed, function (err, result, field) {
                 if (err) {
                     console.log("errrrrrr1 "+err);
                     res.status(500).json(new APIError("Error when querry database"));
                 } else {
                     let likeCount = result[0].like_count + 1;
-                    con.query("update `Like` set like_count=" + likeCount + ",like_flag = 1 where id_feed = " + idFeed +" and username ='"+username+"'", function (err, result) {
+                    con.query("select * from `Like` where id_feed = " + idFeed +" and username ='"+username+"'",function(err,result2){
                         if (err) {
-                            console.log("errrrrrr2 "+err);
+                            console.log("errr0000"+err);
                             res.status(500).json(new APIError("Error when querry database"));
                         } else {
-                            console.log("likeCOunt:  "+likeCount);
-            
-                                    res.json({
-                                        like_count: likeCount
-                                    });
-                                     con.release();
+                            if(result2.length!=0){
+                                console.log("vo day ni 1");
+                                con.query("update `Like` set like_flag = 1 where id_feed = " + idFeed +" and username ='"+username+"'", function (err, result) {
+                                    if (err) {
+                                        console.log("errrrrrr2 "+err);
+                                        res.status(500).json(new APIError("Error when querry database"));
+                                    } else {
+                                        con.query("update `Feed` set like_count = "+likeCount+" where id = " + idFeed , function (err, result) {
+                                            if (err) {
+                                                console.log("errrrrrr2 "+err);
+                                                res.status(500).json(new APIError("Error when querry database"));
+                                            } else {
+                                            res.json({
+                                                    like_count: likeCount
+                                                });
+                                                 con.release();
+                                            }
+                                            })
+                                    }
+                                });
+                            }else{
+                                console.log("vo day ni 2  "+likeCount );
+                                con.query("insert into `Like` values("+idFeed+",'"+username+"',1)", function (err, result) {
+                                    if (err) {
+                                        console.log("errrhhhhh "+err);
+                                        res.status(500).json(new APIError("Error when querry database"));
+                                    } else {
+                                        con.query("update `Feed` set like_count = "+likeCount+" where id = " + idFeed , function (err, result) {
+                                            if (err) {
+                                                console.log("errrrrrr2 "+err);
+                                                res.status(500).json(new APIError("Error when querry database"));
+                                            } else {
+                                            res.json({
+                                                    like_count: likeCount
+                                                });
+                                                 con.release();
+                                            }
+                                            })
+                                    }
+                                });
+                            }
                         }
-                    });
+                    })
                 }
             });
         });
@@ -293,27 +362,32 @@ function Todo() {
         let idFeed = req.params.id;
         let username=req.decoded.username;
         connection.acquire(function (err, con) {
-        con.query("select * from `Like` where id_feed =" + idFeed + " and username ='"+username+"'", function (err, result, field) {
-            if (err) {
-                console.log("errrrrrr1 "+err);
-                res.status(500).json(new APIError("Error when querry database"));
-            } else {
-                let likeCount = result[0].like_count - 1;
-                con.query("update `Like` set like_count=" + likeCount + ",like_flag = 0 where id_feed = " + idFeed +" and username ='"+username+"'", function (err, result) {
-                    if (err) {
-                        console.log("errrrrrr2 "+err);
-                        res.status(500).json(new APIError("Error when querry database"));
-                    } else {
-                        console.log("likeCOunt:  "+likeCount);
-        
+            con.query("select * from `Feed` where id=" + idFeed, function (err, result, field) {
+                if (err) {
+                    console.log("errrrrrr1 "+err);
+                    res.status(500).json(new APIError("Error when querry database"));
+                } else {
+                    let likeCount = result[0].like_count - 1;
+                    con.query("update `Like` set like_flag = 0 where id_feed = " + idFeed +" and username ='"+username+"'", function (err, result) {
+                        if (err) {
+                            console.log("errrrrrr2 "+err);
+                            res.status(500).json(new APIError("Error when querry database"));
+                        } else {
+                            con.query("update `Feed` set like_count = "+likeCount+" where id = " + idFeed , function (err, result) {
+                                if (err) {
+                                    console.log("errrrrrr2 "+err);
+                                    res.status(500).json(new APIError("Error when querry database"));
+                                } else {
                                 res.json({
-                                    like_count: likeCount
-                                });
-                                 con.release();
-                    }
-                });
-            }
-        });
+                                        like_count: likeCount
+                                    });
+                                     con.release();
+                                }
+                                })
+                        }
+                    });
+                }
+            });
     });
     };
 
@@ -426,18 +500,102 @@ function Todo() {
     };
 
     this.userLike=function(req,res){
-        var feedId=req.params.id;
+        let feedId=req.params.id;
+        let users=[];
         connection.acquire(function (err, con) {
-            con.query("select * from Like where id_feed='" + id + "'", function (err, result) {
+            con.query("select * from `Like` where id_feed=" + feedId +" and like_flag=1", function (err, result) {
                 if (err) {
+                    console.log("err1 : "+err);
                     res.status(500).json(new APIError("Server error querry database"));
+                    con.release();
                 }
                 else {
-                    res.json(result);
+                    let size=result.length;
+                    if(result.length!=0){
+                        for(i in result){
+                            con.query("select * from User where username='" + result[i].username + "'", function (err, result1) {
+                                if (err) {
+                                    console.log("err2 : "+err);
+                                    res.status(500).json(new APIError("Server error querry database"));
+                                }else{
+                                    let user=result1[0];
+                                    user.avatar=env+"avatar/"+result1[0].avatar
+                                    users.push(user);
+                                    if (users.length == size) {
+                                        res.json({
+                                            users:users
+                                        });
+                                        con.release();
+                                    }
+                                }
+                            });
+                        }
+                    }else{
+                        res.json(users);
+                        con.release();
+                    }
                 }
             });
         });
     }
 
+    this.viewOneWithID = function (req, res) {
+        let idFeed = req.params.id;
+        let userId= req.params.userId;
+        connection.acquire(function (err, con) {
+            con.query("select * from User where id='" + userId + "'", function (err, result) {
+                if (err) {
+                    console.log("err11 at get feed one: "+err);
+                    res.status(500).json(new APIError("Server error querry database"));
+                }
+                else {
+                    if(result.length!=0){
+                        con.query("select * from Feed where id_user='" + result[0].id + "' and id="+idFeed+" ORDER BY time DESC", function (err, rs) {
+                            if (err) {
+                                console.log("err12 at get feed one: "+err);
+                                res.status(500).json(new APIError("Server error querry database"));
+                            }
+                            else {
+                                if(rs.length!=0){
+                                    for (i in rs) {
+                                        var image=null
+                                        if(rs[i].image_file !=null){
+                                            image=env+rs[i].image_file
+                                        }
+                                        let feed1 = {
+                                            id: rs[i].id,
+                                            caption: rs[i].caption,
+                                            avatar: env+"avatar/"+ result[0].avatar,
+                                            username: result[0].username,
+                                            id_user:rs[i].id_user,
+                                            file_music: env+ rs[i].file_music,
+                                            file_music_user_write: rs[i].file_music_user_write,
+                                            image_file:image,
+                                            like_count:rs[i].like_count,
+                                            time: rs[i].time
+                                        }
+                                       
+                                            res.render("index",{feed:feed1});
+                                            // res.json({
+                                            //     feeds:object
+                                            // });
+                                            con.release();
+                                        
+                                    }
+                                }else{
+                                    res.render("index",{feed:{}});
+                                    con.release();
+                                }
+                            }
+                        });
+                    }else{
+                        res.render("index",{feed:{}});
+                        con.release();
+                    }
+                    
+                }
+            });
+        });
+    };
 };
 module.exports = new Todo();

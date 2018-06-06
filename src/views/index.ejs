@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name = "format-detection" content = "telephone=no">
+    <title>Karaoke Now- CA HÁT TẬN HƯỞNG CUỘC SỐNG</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"> </script>
+         <link rel="stylesheet" type="text/css" href="/css/base.css">
+         <link rel="stylesheet" type="text/css" href="/css/song.css?v=4.0">
+</head>
+<body>
+        <p id="file_music" style="display:none"><%= feed.file_music%></p>
+        <p id="file_music_user_write" style="display:none"><%= feed.file_music_user_write%></p>
+        <p id="username" style="display:none"><%= feed.username%></p>
+        <p id="avatar" style="display:none"><%= feed.avatar%></p>
+        <p id="count_like" style="display:none"><%= feed.count_like%></p>
+        <p id="image" style="display:none"><%= feed.image_file%></p>
+    
+    <div id="header" class="downLoad">
+        <a href="javascript:void(0)"><img src="/icon_header.png" alt=""></a>
+    </div>
+    <div id="container">
+        <div class="haveSong">
+            <div class="songInfo">
+                <div class="blurBox">
+                    <img src="" alt="" class="blur">
+                </div>
+                <i class="mask"></i>
+                <div class="song_info">
+                    <p class="songName"></p>
+                    <div id="solo" style="transform:rotate(0deg)">
+                        <span class="singer-bg"></span>
+                    <span class="singer">
+                        <img src="" >
+                    </span>
+                    </div>
+                    <div id="chorus">
+                        <div class="leftCover" style="transform:rotate(0deg)">
+                            <span class="singer-bg"></span>
+                        <span class="singer">
+                            <img src="" >
+                        </span>
+                        </div>
+                        <div class="rightCover" style="transform:rotate(0deg)">
+                            <span class="singer-bg"></span>
+                        <span class="singer">
+                            <img src="" >
+                        </span>
+                        </div>
+                    </div>
+                    <div class="time-status">
+                        <a href="javascript:void(0)" id="playerBtn" class="playerBtn"></a>
+                        <div class="playerProgress">
+                            <span id="playerCurrentTime">00:00</span>
+                    <span class="playerTrack">
+                        <span id="bufferedTrack"></span>
+                        <span id="playerCurrent">
+                            <i class="playerCurrentDot"></i>
+                        </span>
+                        <input id="range" type="range" min="0" max="100" step="1" value="0">
+                    </span>
+                            <span id="playerTotalTime">00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="singerInfo">
+                <div class="clearfix solo">
+                    <div class="singer-pic"><img src=""></div>
+                    <dl>
+                        <dt>
+                            <span class="name ellipsis" style="max-width: 6rem"></span>
+                            <span class="lv"></span>
+                            <span class="grow"></span>
+                        </dt>
+                        <dd></dd>
+                        <dd class="type downLoad">
+                            <strong style="margin-top: 0.525rem"><i></i>Theo dõi</strong>
+                        </dd>
+                        <dd class="type downLoad">
+                            <em>0lần song ca </em>
+                            <strong>song ca</strong>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="clearfix chorus">
+                    <div>
+                        <img src="" alt="">
+                    <span>
+                        <strong class="ellipsis"></strong>
+                        <em></em>
+                    </span>
+                        <a href="javascript:void(0)" class="downLoad">Theo dõi</a>
+                    </div>
+                    <div>
+                        <img src="" alt="">
+                    <span>
+                        <strong class="ellipsis"></strong>
+                        <em></em>
+                    </span>
+                        <a href="javascript:void(0)" class="downLoad">Theo dõi</a>
+                    </div>
+                </div>
+                <pre></pre>
+                <p>
+                    <span class="icon-music">0</span>
+                    <span class="icon-gift">0</span>
+                    <span class="icon-msg">0</span>
+                    <span class="icon-like">0</span>
+                </p>
+            </div>
+        </div>
+        <div class="noSong">
+            <img src="/icon_nosong.jpg" alt="">
+            <p>
+                <span>Bài hát này đã xóa</span>
+                <span>Download Karaoke Now để nghe nhiều giọng hát hay</span>
+            </p>
+        </div>
+        <div id="pc">
+            <a href="http://singnowapp.com/goto_appstore" id="iosBtn"></a>
+            <a href="javascript:void(0)" id="androidBtn"></a>
+        </div>
+    </div>
+    <!--<div class="soloList">-->
+        <!--<p class="title">大家都在聽</p>-->
+        <!--<ul>-->
+            <!--<li>-->
+                <!--<div>-->
+                    <!--<img src="http://umedia.singnowapp.com:8081/group1/M00/00/0C/CggZxVhEEbSAAqWLAABuL22IiyY044.png" alt="">-->
+                    <!--<span>變變變</span>-->
+                    <!--<i>25654</i>-->
+                <!--</div>-->
+                <!--<p class="clearfix">-->
+                    <!--<span>王楠楠</span>-->
+                    <!--<i>高雄市</i>-->
+                <!--</p>-->
+                <!--<p class="moreELlipsis">看我七十耳邊，變來變去，看我七十二變，變來變去</p>-->
+            <!--</li>-->
+        <!--</ul>-->
+    <!--</div>-->
+    <div class="maskBox" id="maskBox">
+        <i id="imask"></i>
+        <img src="/weixin.png" class=" animated slideInDown">
+    </div>
+    <div id="pcMask"></div>
+    <div id="j-popup">
+        <div class="mask" id="j-mask"></div>
+        <ul id="showMask">
+            <li>
+                <a href="http://singnowapp.com/goto_googleplay">Tải Google Play</a></li>
+            <li><a href="http://singnowapp.com/download_apk">Tải về</a></li>
+            <li id="cancle">Quay lại</li>
+        </ul>
+    </div>
+    <audio id="audio" src="" preload="auto"></audio>
+    <script src="font.js"></script>
+    <!-- <script src="song.js?v=3.3"></script> -->
+    <script>
+            var fileMusic= document.getElementById("file_music").innerHTML;    
+            var fileMusicUserWrite= document.getElementById("file_music_user_write").innerHTML;                
+            var username= document.getElementById("username").innerHTML;
+            var avatar= document.getElementById("avatar").innerHTML;
+            var countLike= document.getElementById("count_like").innerHTML;
+            var imageFile= document.getElementById("image").innerHTML;
+             
+             var solo = document.getElementsByClassName('solo');
+             var playerBtn = document.getElementsByClassName('playerBtn');
+             var bufferedTrack = document.getElementsByClassName('bufferedTrack');
+             var playerCurrent = document.getElementsByClassName('playerCurrent');
+             var range = document.getElementsByClassName('range');
+             var playerCurrentTime = document.getElementsByClassName('playerCurrentTime');
+             var playerTotalTime = document.getElementsByClassName('playerTotalTime');
+             var audio = document.getElementsByClassName('audio');
+
+             $('#container').style.display = 'block';
+             alert("hhhhhhhhhh");
+        
+            //  $class('#container pre')[0].innerHTML = data.response_data.song.desc;
+            //  $class('.icon-music')[0].innerHTML = data.response_data.song.listenCount;
+            //  $class('.icon-gift')[0].innerHTML = data.response_data.song.charm;
+            //  $class('.icon-msg')[0].innerHTML = data.response_data.song.commentCount;
+            document.getElementsByClassName('icon-like')[0].innerHTML = countLike;
+            //  if (data.response_data.song.type == 0 || data.response_data.song.type == 2){
+                //  data.response_data.song.type == 0 ? $class('.type')[0].style.display = 'block' : ($class('.type')[1].style.display = 'block',$class('.solo em')[0].innerHTML = data.response_data.song.chorusCount+'lần song ca');
+                document.getElementsByClassName('img')[0].setAttribute('src',imageFile);
+                 solo.style.display = 'block';
+                 document.getElementsByClassName('name')[0].innerHTML = username;
+                 document.getElementsByClassName('img')[0].setAttribute('src',imageFile);
+                //  $class('.singerInfo .solo .lv')[0].style.backgroundImage = 'url("../img/song/rank/singerRank_'+(data.response_data.user.singerTitleLv <= 9 ? '0'+data.response_data.user.singerTitleLv : data.response_data.user.singerTitleLv)+'.png")';
+                //  $class('.singerInfo .solo .grow')[0].style.backgroundImage = 'url("../img/song/grow/icon_grow0'+(parseInt(data.response_data.user.singerLv/10) + 1)+'.png")';
+                //  $class('.singerInfo .solo dd')[0].innerHTML = 'ID '+data.response_data.user.uid;
+                
+            //  }else if (data.response_data.song.type == 1){
+            //      $class('.song_info')[0].style.paddingTop = '2.55rem';
+            //      $class('.leftCover img')[0].setAttribute('src',data.response_data.user.headImg);
+            //      $class('.rightCover img')[0].setAttribute('src',data.response_data.song.partner.headImg);
+            //      $('chorus').style.display = 'block';
+            //      $class('.chorus img')[0].setAttribute('src',data.response_data.user.headImg);
+            //      $class('.chorus img')[1].setAttribute('src',data.response_data.song.partner.headImg);
+            //      $class('.chorus strong')[0].innerHTML = data.response_data.user.nick;
+            //      $class('.chorus strong')[1].innerHTML = data.response_data.song.partner.nick;
+            //      $class('.chorus em')[0].innerHTML = 'ID '+data.response_data.user.uid;
+            //      $class('.chorus em')[1].innerHTML = 'ID '+data.response_data.song.partner.uid;
+            //      $class('.chorus')[0].style.display = 'block';
+            //  }
+            document.getElementsByClassName('haveSong')[0].style.display = 'block';
+            
+             getDuration(fileMusic);
+             if (audio && audio.canPlayType('audio/mpeg')) {
+                 audio.src = fileMusic;
+                 audio.addEventListener('timeupdate', function() {
+                     var progress = parseInt((this.currentTime / this.duration) * 100);
+                     range.value = progress;
+                     playerCurrent.style.width = progress + '%';
+                     playerCurrentTime.innerHTML = timeFormat(this.currentTime);
+                     playerTotalTime.innerHTML = timeFormat(this.duration);
+     
+                     if (audio.buffered && audio.buffered.length) {
+                         bufferedTrack.style.width =  parseInt(audio.buffered.end(audio.buffered.length - 1) / audio.duration * 100) + '%';
+                     }
+                 });
+     
+                 audio.addEventListener('ended', function() {
+                     range.value = 0;
+                     playerCurrent.style.width = '0%';
+                     playerCurrentTime.innerHTML = timeFormat(0);
+                     playerTotalTime.innerHTML = timeFormat(this.duration);
+                     playerBtn.className = 'playerBtn';
+                    //  if (data.response_data.song.type == 1){
+                    //      leftCover.className = 'leftCover';
+                    //      rightCover.className = 'rightCover';
+                    //  }else {
+                         solo.className = '';
+                    //  }
+                 });
+     
+                 audio.load();
+                 playerBtn.className = 'playerBtn';
+     
+             } else {
+                 // alert('');
+             }
+             playerBtn.onclick = function() {
+                 if (audio.paused) {
+                     audio.play();
+                     this.className = 'playerBtn playing';
+                    //  if (data.response_data.song.type == 1){
+                    //      leftCover.className = 'leftCover rotate';
+                    //      rightCover.className = 'rightCover rotate';
+                    //  }else {
+                         solo.className = 'rotate';
+                    //  }
+                 } else {
+                     audio.pause();
+                     this.className = 'playerBtn';
+                    //  if (data.response_data.song.type == 1){
+                    //      leftCover.className = 'leftCover';
+                    //      rightCover.className = 'rightCover';
+                    //  }else {
+                         solo.className = '';
+                    //  }
+                 }
+             };
+     
+             range.onchange = function() {
+                 playerCurrent.style.width = this.value + '%';
+                 audio.currentTime = audio.duration * (this.value / 100);
+             };
+     
+             var allImgs = document.getElementsByTagName('img');
+             for (var i = 0, len = allImgs.length; i < len; i++) {
+                 allImgs[i].setAttribute('ondragstart', 'return false');
+             }
+     
+             setDraggable(range, function(progress) {
+                 audio.currentTime = audio.duration * progress;
+                 var percent = parseInt(progress * 100);
+                 range.value = percent;
+                 playerCurrent.style.width = percent + '%';
+             });
+         </script>
+</body>
+</html>

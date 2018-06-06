@@ -28,6 +28,12 @@ module.exports = {
     },
     updateFeed:function(req, res, fileName,fileNameUserWrite){
             feed.updateFeed(req,res,fileName,fileNameUserWrite);
+    },
+    userLike:function(req,res){
+            feed.userLike(req,res);
+    },
+    viewOneWithID:function(req,res){
+            feed.viewOneWithID(req,res);
     }
 }
 
